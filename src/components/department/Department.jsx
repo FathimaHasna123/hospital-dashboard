@@ -62,7 +62,7 @@ function Department() {
         updateForm.setFieldsValue({ name: record.name })
         setUpdateId(record.id)
         setUpdateModal(true)
-    };
+    }
 
    
     const updateFinish = (values) => {

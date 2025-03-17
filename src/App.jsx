@@ -6,6 +6,7 @@ import { Link, Outlet } from 'react-router-dom';
 import { Content, Header } from 'antd/es/layout/layout';
 import { FcDepartment, FcList } from "react-icons/fc"
 import { FaUserDoctor } from "react-icons/fa6"
+import { FcContacts } from "react-icons/fc"
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -35,6 +36,10 @@ function App() {
 
     <Menu.Item key={'3'} icon={<FaUserDoctor/>}>
     <Link to={'/doctors'}>Doctors</Link>
+    </Menu.Item>
+
+    <Menu.Item key={'4'} icon={<FcContacts />}>
+    <Link to={'/contact'}>Contact</Link>
     </Menu.Item>
 
   </Menu>

@@ -9,6 +9,7 @@ import DashboradPage from './pages/DashboradPage.jsx'
 import DepartmentPage from './pages/DepartmentPage.jsx';
 import { QueryClient, QueryClientProvider } from 'react-query'
 import DoctorsPage from './pages/DoctorsPage.jsx'
+import ContactPage from './pages/ContactPage.jsx'
 
 
 
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
       {
         path:'doctors',
         element:<DoctorsPage />
+      },
+      {
+        path:'contact',
+        element:<ContactPage/>
       },
     ]
   }
