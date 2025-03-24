@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { getDoctors } from "../../utils/doctors/DoctorsApi";
 import { useQuery } from "react-query";
 import { getDepartment } from "../../utils/department/DepartmentApi";
-import { useCreateDepartment, useDeleteDepartment, useUpdateDepartment } from "../../utils/department/DepartmentHook";
 import { UploadOutlined } from '@ant-design/icons'
+import { useCreateDoctors, useDeleteDoctors, useUpdateDoctors } from "../../utils/doctors/DoctorsHook";
 
 
 function Doctors () {
@@ -15,9 +15,9 @@ function Doctors () {
     const [updateId, setUpdateId] = useState()
     const [form] = Form.useForm()
     const [updateForm] = Form.useForm()
-    const { mutate: Create } = useCreateDepartment()
-    const { mutate: UpdateDoc } = useUpdateDepartment()
-    const { mutate: Delete123 } = useDeleteDepartment()
+    const { mutate: Create } = useCreateDoctors()
+    const { mutate: Update } = useUpdateDoctors ()
+    const { mutate: Delete } = useDeleteDoctors()
     
     const columns = [
         {
@@ -26,9 +26,9 @@ function Doctors () {
             dataIndex:'id'
         },
         {
-            title:"DoctrosName",
-            key:'doctrosName',
-            dataIndex:'doctrosName'
+            title:"DoctorsName",
+            key:'doctorsName',
+            dataIndex:'doctorsName'
         },
         {
             title:"Address",
@@ -55,36 +55,80 @@ function Doctors () {
             render:(record)=>(
                 <div className='flex items-center space-x-[20px]'>
                     <button className='text-white bg-blue-500 px-[10px] py-[5px] rounded-md' onClick={() => onOpenUpdateModal(record)} > Update </button>
-                    <button className='text-white bg-blue-900 px-[10px] py-[5px] rounded-md'onClick={() => handleDelete(record)}>Delete</button> 
+                    <button className='text-white bg-blue-900 px-[10px] py-[5px] rounded-md'onClick={() => handleDelete(record.id)}>Delete</button> 
                 </div>
             )
         }
     ]
 
  
-    const onFinish = (values) => {
-        Create(values, {
-            onSuccess: () => {
-                message.success('Created successfully')
-                setAddModal(false);
-                form.resetFields();
-                refetch();
-            },
-            onError: () => {
-                message.error('Failed to create')
-            }
-        })
-    }
+     const onFinish = (values) => {
+        const formData = new FormData()
+        formData.append('doctorsName',values.doctorsName)
+        formData.append('address',values.address)
+        formData.append('department',values.department)
+        formData.append('image',values.image.file.originFileObj)
+         Create(formData, {
+             onSuccess:()=>{
+                 message.success('Created successfully')
+                 setAddModal(false)
+                 form.resetFields()
+                 refetch()
+             },
+             onError:()=>{
+                 message.error('Failed to create')
+             }
+         })
+     }
+  
+     const updateFinish = (values) => {
+        console.log("Updating Doctor ID:", updateId)
+        console.log("Submitted Data:", values)
+      
+        const formData = new FormData();
+        formData.append("doctorsName", values.doctorsName);
+        formData.append("address", values.address);
+
+        if (values.department.value){
+
+            formData.append("department", values.department.value);
+        }else {
+            formData.append("department", values.department);
+        }
+
+
+        if (values.image&& values.image.file){
+
+            formData.append('image',values.image.file.originFileObj)
+        }else{
+            console.log('ssss')
+        }
+       
+         const val = { id: updateId, data: formData }
+        
+         Update(val, {
+             onSuccess() {
+                 message.success('Updated successfully')
+                 setUpdateModal(false)
+                 refetch()
+             },
+             onError() {
+                 message.error('Failed to update')
+             }
+         })
+ 
+         console.log("bbbbbbbbbbbbbbbbbbbbbbbbbbbb");  
+     }
    
 
     const onOpenUpdateModal = (record) => {
         updateForm.setFieldsValue({
-            doctorsName: record.doctorsName,
+            doctorsName: record.doctorsName,  
             address: record.address,
-            department: record.department.id, 
+            department:{ value: record.department.id, label: record.department.name },
         })
         updateForm.setFieldsValue({
-            image: [{
+            image: record.image[{
                 uid: record.id, 
                 name: 'image.jpg',
                 status: 'done',
@@ -93,38 +137,23 @@ function Doctors () {
         });
 
         setUpdateId(record.id);
+        console.log("Opening update modal for ID:", record.id)
         setUpdateModal(true);
     }
-      
-       const updateFinish = (values) => {
-           const val = { id: updateId, data: values }
-          
-           UpdateDoc(val, {
-               onSuccess() {
-                   message.success('Updated successfully')
-                   setUpdateModal(false)
-                   refetch()
-               },
-               onError() {
-                   message.error('Failed to update')
-               }
-           })
-   
-           
-       }
-   
+    
+    
 
-       const handleDelete = (values) => {
-        Delete123(values.id, {
-            onSuccess() {
-                message.success('Deleted successfully');
-                refetch();
-            },
-            onError() {
-                message.error('Delete failed');
-            }
-        });
-    };
+    const handleDelete = (id) => {
+          Delete(id, {
+              onSuccess() {
+                  message.success('Deleted successfully')
+                  refetch()
+              },
+              onError() {
+                  message.error('Failed to delete')
+              }
+          })
+      }
   
 
     return (
@@ -133,7 +162,8 @@ function Doctors () {
                 <button className="px-[13px] py-[7px] rounded-md text-white bg-black" onClick={()=>setAddModal(true)}>Add</button>
             </div>
             <div className="">
-                <Table loading={isLoading} columns={columns} dataSource={data?.data}/>
+            <Table loading={isLoading} columns={columns} dataSource={data?.data.map(item => ({ ...item, key: item.id }))} />
+
             </div>
             <Modal
             open={addModal}
@@ -143,21 +173,23 @@ function Doctors () {
 
                 <Form layout='vertical' onFinish={onFinish} form={form}>
 
-                    <Form.Item name={'doctrosName'} label='DoctrosName'>
-                        <Input placeholder='doctrosName'/>
+                    <Form.Item name={'doctorsName'} label='DoctorsName'>
+                        <Input placeholder='doctorsName'/>
                     </Form.Item>
 
                     <Form.Item name={'address'} label='Address'>
                         <Input placeholder="address"/>
                     </Form.Item>
 
-                    <Form.Item name={'department'} label='Department'>
                     
-                    <Select placeholder='department'
-                        options={departmentData?.data.map((item)=>({
-                            value:item.id,
-                            label:item.departmentName,
-                        }))  } />
+                    
+                    <Form.Item name="department" label="Department">
+      <Select
+        placeholder="Select department"
+        options={departmentData?.data.map((item) => ({
+          value: item.id,
+          label: item.name,
+        }))}/>
                     </Form.Item>
 
                     <Form.Item name={'image'} label='Image'>
@@ -173,7 +205,7 @@ function Doctors () {
                 </Form>
             </Modal>
 
-            <Modal
+<Modal
             open={updateModal}
             onCancel={()=>setUpdateModal(false)}
             footer={null}
@@ -181,36 +213,32 @@ function Doctors () {
 
                 <Form layout='vertical' onFinish={updateFinish} form={updateForm}>
 
-                    <Form.Item name={'doctrosName'} label='DoctrosName'>
-                        <Input placeholder='doctrosName'/>
-                    </Form.Item>
+ <Form.Item name="doctorsName" label="Doctor's Name"  rules={[{ required: true, message: 'Please enter doctors name' }]}>
+      <Input placeholder="Enter doctor's name" />
+    </Form.Item>
 
-                    <Form.Item name={'address'} label='Address'>
-                        <Input placeholder="address"/>
-                    </Form.Item>
+ <Form.Item name={'address'} label='Address' rules={[{ required: true, message: 'Please enter an address' }]}>
+     <Input placeholder="address"/>
+    </Form.Item>
 
-                    <Form.Item name={'department'} label='Department'>
-                    
-                    <Select placeholder='department'
-                        options={departmentData?.data.map((item)=>({
-                            value:item.id,
-                            label:item.departmentName,
-                        }))  } />
-                    </Form.Item>
+ <Form.Item name="department" label="Department"  rules={[{ required: true, message: 'Please select a department' }]}>
+      <Select
+        placeholder="Select department"
+        options={departmentData?.data.map((item) => ({
+          value: item.id,
+          label: item.name,
+        }))}/>
+    </Form.Item>
 
-                    <Form.Item name={'image'} label='Image' >
-                        <Upload
-                            name="image" listType="picture">
-                            <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                        </Upload>
-                    </Form.Item>
+<Form.Item name={'image'} label='Image'>
+    <Upload
+        name="image"
+        listType="picture">
+        <Button icon={<UploadOutlined />}></Button>
+    </Upload>
+</Form.Item>
 
-                    <Form.Item name={'image'} label='Image'>
-                        <Input placeholder='image'/>
-
-                    </Form.Item>
-
-                    <Form.Item className="m-0">
+                    <Form.Item>
                 <Button type="primary" className="w-full" htmlType="submit"> Submit </Button>
                     </Form.Item>
                 

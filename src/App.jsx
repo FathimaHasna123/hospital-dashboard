@@ -7,6 +7,7 @@ import { Content, Header } from 'antd/es/layout/layout';
 import { FcDepartment, FcList } from "react-icons/fc"
 import { FaUserDoctor } from "react-icons/fa6"
 import { FcContacts } from "react-icons/fc"
+import { AiFillProduct } from "react-icons/ai"
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -40,6 +41,10 @@ function App() {
 
     <Menu.Item key={'4'} icon={<FcContacts />}>
     <Link to={'/contact'}>Contact</Link>
+    </Menu.Item>
+
+    <Menu.Item key={'5'} icon={<AiFillProduct />}>
+     <Link to={'/appointment'}>Appointment</Link>    
     </Menu.Item>
 
   </Menu>
